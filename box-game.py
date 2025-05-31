@@ -11,11 +11,11 @@ class Game(object):
     def __str__(self):
         out = []
         for door in self.doors:
-            open = self.doors[door]
-            if open:
-                out.append(f'/{door}/')
-            else:
+            closed = self.doors[door]
+            if closed:
                 out.append(f'[{door}]')
+            else:
+                out.append(f'/{door}/')
         return ' '.join(out)
     
     def roll_die(self):
@@ -38,32 +38,6 @@ class Game(object):
         
         doors[index] = True
         return True
-    
-    def input_loop(self):
-        
-        while True:
-            entry = input('Portas a fechar: ')
-            try:
-                selection = list(map(int,entry.strip().split()))
-            except:
-                print('Entrada inválida')
-                continue
-
-            total = sum(selection)
-
-            if any([door>self.door_count for door in selection]):
-                print(f'Há apenas portas de 1 a {self.door_count}. Tente novamente.')
-                continue
-
-            if total > self.current_score:
-                print(f"Este valor é maior que os pontos disponíveis. Você tem {self.current_score} pontos.")
-                continue
-
-            if any([door not in self.get_open() for door in selection]):
-                print('Uma destas portas já está fechada')
-                continue
-
-            return selection          
         
     def get_possibilities(self):
         points = self.current_score
@@ -102,45 +76,54 @@ class Game(object):
                 thread.append(node)
                 cost = sum(thread)
         return possibilities            
-
-    def game_over(self):
-        open = self.get_open()
-        if 0 < self.current_score < min(open):
-            return True
+    
+    def input_loop(self):        
+        n = len(self.possibilities)
+        print('Possíveis combinações de portas a fechar:')
+        for i, comb in enumerate(self.possibilities):
+            str_ints = map(str, comb[::-1])
+            print(f'{i+1}) [{", ".join(str_ints)}]')
+        print()
         
-        if len(open)==0:
-            return True
+        while True:
+            try:
+                entry = input('Escolha uma opção: ')
+                num = int(entry)
+            except:
+                if entry in ['quit','exit','^C']:
+                    exit()
+                print('Entrada inválida')
+                continue
 
-        return False
+            if num > n or num < 1:
+                print(f'Escolha uma opção de 1 a {n}')
+                continue
+
+            selection = self.possibilities[num-1]
+            return selection          
 
     def game_loop(self):
         while True:
             dice = self.roll_dice()
             self.current_score = sum(dice)
             print(f'Valor dos dados: {dice}.')
-            print(self)
             print(f"Pontos disponíveis: {self.current_score}")
+            print(self)
+
+            self.possibilities = self.get_possibilities()
+            if len(self.possibilities) == 0:
+                print("Perdeu seu perdedor >:(")
+                return
 
             choice = self.input_loop()
             for door in choice:
                 self.doors[door] = True
 
-            if self.game_over():
-                if len(self.get_open()) == 0:
-                    print('Você ganhou! Que lacre')
-
-                else:
-                    print("Perdeu seu perdedor >:(")
-
+            if all([self.doors[i] for i in self.doors]):
+                print('Você ganhou! Que lacre')
                 return
-
-
-
 
 if __name__ == "__main__":
     game = Game()
-    game.current_score = 5
-    x = game.get_possibilities()
-    print(x)
-    # game.game_loop()
+    game.game_loop()
     
