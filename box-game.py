@@ -5,7 +5,7 @@ class Game(object):
     def __init__(self, door_count=9):
         self.door_count = door_count
         self.number_closed = door_count
-        self.doors = {i:False for i in range(1,door_count+1)}
+        self.doors = {i:False for i in range(1,door_count+1)} # True = fechada
         self.current_score = 0
 
     def __str__(self):
@@ -27,7 +27,7 @@ class Game(object):
 
         return roll1, roll2
     
-    def get_closed(self):
+    def get_open(self):
         return [i for i in self.doors if not self.doors[i]]
     
     def close_door(self, index):
@@ -42,34 +42,73 @@ class Game(object):
     def input_loop(self):
         
         while True:
-            num = input('Porta a fechar: ')
+            entry = input('Portas a fechar: ')
             try:
-                num = int(num)
+                selection = list(map(int,entry.strip().split()))
             except:
                 print('Entrada inválida')
                 continue
 
-            if num>self.door_count:
+            total = sum(selection)
+
+            if any([door>self.door_count for door in selection]):
                 print(f'Há apenas portas de 1 a {self.door_count}. Tente novamente.')
                 continue
 
-            if num > self.current_score:
+            if total > self.current_score:
                 print(f"Este valor é maior que os pontos disponíveis. Você tem {self.current_score} pontos.")
                 continue
 
-            if num not in self.get_closed():
-                print('Esta porta já está aberta')
+            if any([door not in self.get_open() for door in selection]):
+                print('Uma destas portas já está fechada')
                 continue
 
-            return num            
-            
+            return selection          
+        
+    def get_possibilities(self):
+        points = self.current_score
+        possibilities = []
+        available_doors = [i for i in self.doors if not self.doors[i] and i <= points]
+
+        while len(available_doors) > 0:
+            node = available_doors.pop() # Pega o maior nó como inicial
+            frontier = []
+            thread = [node]
+            cost = node
+            father = None
+
+            while True:
+                
+                # Se atingiu a soma, essa é uma possibilidade
+                if cost == points:
+                    possibilities.append(list(thread))
+                    thread.pop() # Remove último elemento da thread
+                    if len(thread) == 0: # Se era uma thread unitária, acabou a exploração
+                        break
+                
+                # Se não atingiu a soma, segue explorando
+                # Obtém a fronteira do nodo atual
+                # Está na fronteira todo nodo menor que não ultrapasse o total de pontos
+                else:
+                    frontier = frontier + [(node, i) for i in available_doors if i<node and cost+i <= points]
+
+                if len(frontier) == 0:
+                    break
+
+                father, next = frontier.pop()
+                while thread[-1] != father:
+                    thread.pop()
+                node = next
+                thread.append(node)
+                cost = sum(thread)
+        return possibilities            
 
     def game_over(self):
-        closed = self.get_closed()
-        if 0 < self.current_score < min(closed):
+        open = self.get_open()
+        if 0 < self.current_score < min(open):
             return True
         
-        if len(closed)==0:
+        if len(open)==0:
             return True
 
         return False
@@ -79,18 +118,15 @@ class Game(object):
             dice = self.roll_dice()
             self.current_score = sum(dice)
             print(f'Valor dos dados: {dice}.')
+            print(self)
+            print(f"Pontos disponíveis: {self.current_score}")
 
-            while not self.game_over() and self.current_score > 0:
-                print(self)
-                print(f"Pontos disponíveis: {self.current_score}")
-
-                choice = self.input_loop()
-                self.doors[choice] = True
-                self.current_score -= choice
-
+            choice = self.input_loop()
+            for door in choice:
+                self.doors[door] = True
 
             if self.game_over():
-                if len(self.get_closed()) == 0:
+                if len(self.get_open()) == 0:
                     print('Você ganhou! Que lacre')
 
                 else:
@@ -103,5 +139,8 @@ class Game(object):
 
 if __name__ == "__main__":
     game = Game()
-    game.game_loop()
+    game.current_score = 5
+    x = game.get_possibilities()
+    print(x)
+    # game.game_loop()
     
