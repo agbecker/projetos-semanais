@@ -124,6 +124,6 @@ class Game(object):
                 return
 
 if __name__ == "__main__":
-    game = Game()
+    game = Game(22)
     game.game_loop()
     

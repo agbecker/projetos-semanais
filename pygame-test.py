@@ -1,5 +1,6 @@
 import pygame
 import sys
+from random import choice
 
 # Constantes
 WINDOW_WIDTH = 1280
@@ -12,6 +13,8 @@ BOX_MEDIUM_HEIGHT = int(0.3*WINDOW_HEIGHT)
 # Cores
 LIGHT_GRAY = pygame.Color(150,150,150)
 CYAN = pygame.Color(0, 220, 220)
+RED = pygame.Color(250,0,0)
+YELLOW = pygame.Color(230,220,0)
 
 
 def set_boxes(num_boxes):
@@ -33,6 +36,7 @@ screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
 pygame.display.set_caption("RoubaChavePIX.exe")
 boxes = set_boxes(9)
 
+box_colors = {i:CYAN for i,_ in enumerate(boxes)}
 
 while True:
     for event in pygame.event.get():
@@ -43,9 +47,9 @@ while True:
         elif event.type == pygame.MOUSEBUTTONDOWN:
             for i, box in enumerate(boxes):
                 if box.collidepoint(event.pos):
-                    print('AAA'*(i+1))
+                    box_colors[i] = choice([CYAN,RED,YELLOW])
 
     screen.fill(LIGHT_GRAY)  # gray background
-    for box in boxes:
-        pygame.draw.rect(screen, CYAN, box)
+    for i, box in enumerate(boxes):
+        pygame.draw.rect(screen, box_colors[i], box)
     pygame.display.flip()
