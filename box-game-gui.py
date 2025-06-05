@@ -33,11 +33,17 @@ MESSAGE_Y = 660
 ## Buttons
 BUTTON_WIDTH = 300
 BUTTON_HEIGHT = 70
+
+### GAME
 BUTTON_X = 800
 ROLL_BUTTON_Y = 500
 BUTTON_DY = 20
 RESET_BUTTON_Y = ROLL_BUTTON_Y+BUTTON_DY+BUTTON_HEIGHT
+RETURN_BUTTON_Y = RESET_BUTTON_Y+BUTTON_DY+BUTTON_HEIGHT
 FONT_SIZE_BUTTON = 54
+
+### MENU
+MENU_BUTTON_X = (WINDOW_WIDTH - BUTTON_WIDTH)//2
 
 ## Dice
 DIE_SIZE = 64
@@ -193,6 +199,11 @@ class Game(object):
         self.last_value = 0
         self.current_sum = 0
 
+        self.game_screen = 0
+        # 0: Menu
+        # 1: Rules
+        # 2: Game
+
 
     def get_box(self,value):
         return self.boxes[value-1]
@@ -283,65 +294,64 @@ class Game(object):
         return possibilities                 
 
     def game_loop(self, message, buttons):
-        while True:
-            self.handle_inputs(buttons)
+        self.handle_inputs(buttons)
 
-            if self.should_reset:
-                self.should_reset = False
-                self.reset(message)
+        if self.should_reset:
+            self.should_reset = False
+            self.reset(message)
 
-            elif self.game_over != 0:
-                if self.game_over == -1:
-                    message.set_text("Você perdeu, perdedor >:(")
-                    for box in self.boxes:
-                        box.is_clickable = False
-
-                else:
-                    message.set_text("Você ganhou! Que lacre")
-
-            elif self.is_rolling:
-                rolls = self.roll_dice(buttons, message)
-                [die1, die2] = self.dice
-                die1.value = rolls[0]
-                die2.value = rolls[1]
-                self.score_to_reach = sum(rolls)
-                text = f'Feche portas somando {self.score_to_reach}'
-                message.set_text (text)
-                self.is_rolling = False
-                self.is_closing = True
-                self.current_sum = 0
+        elif self.game_over != 0:
+            if self.game_over == -1:
+                message.set_text("Você perdeu, perdedor >:(")
                 for box in self.boxes:
-                    box.is_clickable = not box.is_shut
+                    box.is_clickable = False
 
-                self.possibilities = self.get_possibilities()
-                #print(self.possibilities)
+            else:
+                message.set_text("Você ganhou! Que lacre")
 
-            
+        elif self.is_rolling:
+            rolls = self.roll_dice(buttons, message)
+            [die1, die2] = self.dice
+            die1.value = rolls[0]
+            die2.value = rolls[1]
+            self.score_to_reach = sum(rolls)
+            text = f'Feche portas somando {self.score_to_reach}'
+            message.set_text (text)
+            self.is_rolling = False
+            self.is_closing = True
+            self.current_sum = 0
+            for box in self.boxes:
+                box.is_clickable = not box.is_shut
 
-            # Process input
-            if self.is_closing:
+            self.possibilities = self.get_possibilities()
+            #print(self.possibilities)
 
-                if len(self.possibilities) == 0:
-                    self.game_over = -1
+        
 
-                elif self.current_sum == self.score_to_reach:
-                    self.is_closing = False
-                    for box in self.boxes:
-                        box.is_clickable = False
-                        if box.is_shut:
-                            self.doors[box.value] = True
+        # Process input
+        if self.is_closing:
 
-                    if all(box.is_shut for box in self.boxes):
-                        self.game_over = 1
+            if len(self.possibilities) == 0:
+                self.game_over = -1
+
+            elif self.current_sum == self.score_to_reach:
+                self.is_closing = False
+                for box in self.boxes:
+                    box.is_clickable = False
+                    if box.is_shut:
+                        self.doors[box.value] = True
+
+                if all(box.is_shut for box in self.boxes):
+                    self.game_over = 1
 
 
-                elif self.last_value != 0:
-                    self.current_sum += self.last_value
-                    self.last_value = 0
-                    #print(self.current_sum)
-            
+            elif self.last_value != 0:
+                self.current_sum += self.last_value
+                self.last_value = 0
+                #print(self.current_sum)
+        
 
-            self.render(buttons,message)
+        self.render(buttons,message)
     
     def handle_inputs(self, buttons):
         for event in pygame.event.get():
@@ -397,6 +407,16 @@ class Game(object):
         self.is_closing = False
         self.game_over = False
 
+    def main_loop(self, message, buttons):
+        while True:
+            match self.game_screen:
+                case 0:
+                    self.menu()
+                case 1:
+                    self.rules_screen()
+                case 2:
+                    self.game_loop(message, buttons)
+
 
 # ----- MAIN ----------
 
@@ -414,7 +434,8 @@ if __name__ == '__main__':
 
     # Game loop
     game.reset(message)
-    game.game_loop(message, buttons)
+    game.game_screen = 2
+    game.main_loop(message, buttons)
 
         
 
