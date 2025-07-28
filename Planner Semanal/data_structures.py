@@ -1,3 +1,5 @@
+from pygame import Color
+
 class Time(object):
     def __init__(self, hour, minute):
         self.hour = hour
@@ -20,11 +22,12 @@ class Time(object):
         return self == other or self < other
 
 class Task(object):
-    def __init__(self, day, time, name, details = ''):
+    def __init__(self, day, time, name, details = '', color_index = 0):
         self.day = day
         self.time = time
         self.name = name
         self.details = details
+        self.color = Task.get_task_color(color_index)
 
     def __eq__(self, other):
         if type(other) is not Task:
@@ -38,6 +41,11 @@ class Task(object):
         if type(other) is not Task:
             raise TypeError('Can only compare Task objects')
         return self < other or self == other
+    
+    @classmethod
+    def get_task_color(cls, index):
+        return [Color(27,155,255),
+                Color(255,74,5)][index]
 
 class Day(object):
     def __init__(self, number):
