@@ -1,6 +1,7 @@
 Tela principal: dois modos
     - Expandido: Mostrar a semana como no Google Calendar. Marcado de hora em hora, scrollável
-    - Foco em um dia: Quando clica no dia (header da coluna), diminui a tela da semana e mostra a lista das tarefas daquele dia, com os horários e possivelmente outros detalhes
+    - Foco em um dia: Quando clica no dia (header da coluna), diminui a tela da semana e mostra a lista das tarefas daquele dia,
+      com os horários e possivelmente outros detalhes
 
 Mostrar mais do que só a semana atual? 
 
